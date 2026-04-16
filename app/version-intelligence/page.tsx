@@ -1,5 +1,6 @@
 "use client";
 
+import { getFlag } from "@/lib/featureFlags"
 import { useState, useEffect } from "react";
 import { PageWrapper } from "@/components/PageWrapper";
 import { VersionDistributionChart } from "@/components/VersionDistributionChart";
@@ -13,6 +14,12 @@ export default function VersionIntelligencePage() {
   useEffect(() => {
     async function fetchData() {
       try {
+
+        const enabled = await getFlag("version_intelligence")
+
+        if (!enabled) {
+        return null
+}
         const [statsRes, pnodesRes] = await Promise.all([
           fetch("/api/network/overview", { cache: "no-store" }),
           fetch("/api/pnodes", { cache: "no-store" }),
