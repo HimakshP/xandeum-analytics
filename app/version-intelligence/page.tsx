@@ -5,42 +5,67 @@ import { useState, useEffect } from "react";
 import { PageWrapper } from "@/components/PageWrapper";
 import { VersionDistributionChart } from "@/components/VersionDistributionChart";
 import { Package, TrendingUp, AlertCircle, CheckCircle } from "lucide-react";
+import { createDepliteClient } from "@/lib/deplite";
+
+
+const depliteClient = createDepliteClient({
+  programId: "C8s478Z3a9BFHEbv5TvZ4iSzw98brqJppAcsYYdrzzDu",
+  admin: "GpaWtkxq65cWp3uB7xxFdS4pDVp52jNumJ58RnDiSvpQ",
+  rpc: "https://devnet.helius-rpc.com/?api-key=521ac8a4-be7b-4f47-b49c-9cdfa9cb770f"
+});
 
 export default function VersionIntelligencePage() {
   const [stats, setStats] = useState<any>(null);
   const [pnodes, setPnodes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [enabled, setEnabled] = useState<boolean | null>(null);
+
+
+async function fetchData() {
+    try {
+      const flag = await getFlag("version_intelligence")
+      setEnabled(flag)
+
+      if (!flag) {
+        setLoading(false)
+        return
+      }
+
+      const [statsRes, pnodesRes] = await Promise.all([
+        fetch("/api/network/overview", { cache: "no-store" }),
+        fetch("/api/pnodes", { cache: "no-store" }),
+      ])
+
+      const statsData = await statsRes.json()
+      const pnodesData = await pnodesRes.json()
+
+      setStats(statsData?.data)
+      setPnodes(pnodesData?.data || [])
+    } catch (error) {
+      console.error("Error fetching data:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
 
   useEffect(() => {
-    async function fetchData() {
-      try {
+  async function run() {
+    const flag = await depliteClient.get("version_intelligence")
+    setEnabled(flag)
+    fetchData()
+  }
 
-        const enabled = await getFlag("version_intelligence")
+  run()
 
-        if (!enabled) {
-        return null
-}
-        const [statsRes, pnodesRes] = await Promise.all([
-          fetch("/api/network/overview", { cache: "no-store" }),
-          fetch("/api/pnodes", { cache: "no-store" }),
-        ]);
+  const unsub = depliteClient.subscribe("version_intelligence", (val) => {
+    setEnabled(val)
+  })
 
-        const statsData = await statsRes.json();
-        const pnodesData = await pnodesRes.json();
+  return () => unsub()
+}, [])
 
-        setStats(statsData?.data);
-        setPnodes(pnodesData?.data || []);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchData();
-  }, []);
-
-  // Calculate version statistics
+  // Calculate version statisticscd ..
   const versionStats = stats?.versions?.distribution || {};
   const latestVersion = stats?.versions?.latest || "Unknown";
   const totalNodes = Object.values(versionStats).reduce(
