@@ -1,11 +1,10 @@
 "use client";
 
-import { getFlag } from "@/lib/featureFlags"
 import { useState, useEffect } from "react";
 import { PageWrapper } from "@/components/PageWrapper";
 import { VersionDistributionChart } from "@/components/VersionDistributionChart";
 import { Package, TrendingUp, AlertCircle, CheckCircle } from "lucide-react";
-import { createDepliteClient } from "@/lib/deplite";
+import { createDepliteClient } from "deplite";
 
 
 const depliteClient = createDepliteClient({
@@ -23,7 +22,7 @@ export default function VersionIntelligencePage() {
 
 async function fetchData() {
     try {
-      const flag = await getFlag("version_intelligence")
+      const flag = await depliteClient.get("version_intelligence")
       setEnabled(flag)
 
       if (!flag) {
