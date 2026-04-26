@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.32.1",
+    "@netlify/plugin-nextjs": "^5.15.9",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.4.2",
     "@solana/web3.js": "^1.98.4",
